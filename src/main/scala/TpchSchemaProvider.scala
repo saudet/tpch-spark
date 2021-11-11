@@ -24,9 +24,9 @@ case class Lineitem(
   l_tax: Double,
   l_returnflag: String,
   l_linestatus: String,
-  l_shipdate: String,
-  l_commitdate: String,
-  l_receiptdate: String,
+  l_shipdate: Long,
+  l_commitdate: Long,
+  l_receiptdate: Long,
   l_shipinstruct: String,
   l_shipmode: String,
   l_comment: String)
@@ -42,7 +42,7 @@ case class Order(
   o_custkey: Long,
   o_orderstatus: String,
   o_totalprice: Double,
-  o_orderdate: String,
+  o_orderdate: Long,
   o_orderpriority: String,
   o_clerk: String,
   o_shippriority: Long,
@@ -91,7 +91,7 @@ class TpchSchemaProvider(sc: SparkContext, inputDir: String) {
       Customer(p(0).trim.toLong, p(1).trim, p(2).trim, p(3).trim.toLong, p(4).trim, p(5).trim.toDouble, p(6).trim, p(7).trim)).toDF(),
 
     "lineitem" -> sc.textFile(inputDir + "/lineitem.tbl*").map(_.split('|')).map(p =>
-      Lineitem(p(0).trim.toLong, p(1).trim.toLong, p(2).trim.toLong, p(3).trim.toLong, p(4).trim.toDouble, p(5).trim.toDouble, p(6).trim.toDouble, p(7).trim.toDouble, p(8).trim, p(9).trim, p(10).trim, p(11).trim, p(12).trim, p(13).trim, p(14).trim, p(15).trim)).toDF(),
+      Lineitem(p(0).trim.toLong, p(1).trim.toLong, p(2).trim.toLong, p(3).trim.toLong, p(4).trim.toDouble, p(5).trim.toDouble, p(6).trim.toDouble, p(7).trim.toDouble, p(8).trim, p(9).trim, TpchQuery.parseDate(p(10).trim), TpchQuery.parseDate(p(11).trim), TpchQuery.parseDate(p(12).trim), p(13).trim, p(14).trim, p(15).trim)).toDF(),
 
     "nation" -> sc.textFile(inputDir + "/nation.tbl*").map(_.split('|')).map(p =>
       Nation(p(0).trim.toLong, p(1).trim, p(2).trim.toLong, p(3).trim)).toDF(),
@@ -100,7 +100,7 @@ class TpchSchemaProvider(sc: SparkContext, inputDir: String) {
       Region(p(0).trim.toLong, p(1).trim, p(2).trim)).toDF(),
 
     "order" -> sc.textFile(inputDir + "/orders.tbl*").map(_.split('|')).map(p =>
-      Order(p(0).trim.toLong, p(1).trim.toLong, p(2).trim, p(3).trim.toDouble, p(4).trim, p(5).trim, p(6).trim, p(7).trim.toLong, p(8).trim)).toDF(),
+      Order(p(0).trim.toLong, p(1).trim.toLong, p(2).trim, p(3).trim.toDouble, TpchQuery.parseDate(p(4).trim), p(5).trim, p(6).trim, p(7).trim.toLong, p(8).trim)).toDF(),
 
     "part" -> sc.textFile(inputDir + "/part.tbl*").map(_.split('|')).map(p =>
       Part(p(0).trim.toLong, p(1).trim, p(2).trim, p(3).trim, p(4).trim, p(5).trim.toLong, p(6).trim, p(7).trim.toDouble, p(8).trim)).toDF(),

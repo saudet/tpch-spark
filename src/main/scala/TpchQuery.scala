@@ -6,6 +6,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import org.apache.spark.sql._
+import org.bytedeco.frovedis.frovedis_server
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -32,6 +33,8 @@ abstract class TpchQuery {
 }
 
 object TpchQuery {
+
+  def parseDate(date: String): Long = { new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date).getTime }
 
   def outputDF(df: DataFrame, outputDir: String, className: String): Unit = {
 
@@ -80,8 +83,10 @@ object TpchQuery {
     if (args.length > 0)
       queryNum = args(0).toInt
 
-    val conf = new SparkConf().setAppName("Simple Application")
+    val conf = new SparkConf().setAppName("Simple Application").setMaster("local[8]")
     val sc = new SparkContext(conf)
+
+    frovedis_server.initialize("-np 8")
 
     // read files from local FS
     val INPUT_DIR = "file://" + new File(".").getAbsolutePath() + "/dbgen"
@@ -102,5 +107,8 @@ object TpchQuery {
     }
 
     bw.close()
+
+    frovedis_server.shut_down()
+    sc.stop()
   }
 }
