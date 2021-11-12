@@ -30,11 +30,14 @@ class Q06 extends TpchQuery {
 
     val ret = flineitem.filter($$"l_shipdate" >= TpchQuery.parseDate("1994-01-01") && $$"l_shipdate" < TpchQuery.parseDate("1995-01-01") && $$"l_discount" >= 0.05 && $$"l_discount" <= 0.07 && $$"l_quantity" < 24)
       .agg(sum($$"l_extendedprice"), sum($$"l_discount"))
-    ret.count
 
     val time2 = System.nanoTime()
 
-    System.out.println("TIMES = " + (time1 - time0) / 1000000 + " " + (time2 - time1) / 1000000)
+    ret.count
+
+    val time3 = System.nanoTime()
+
+    System.out.println("TIMES = " + (time1 - time0) / 1000000 + " " + (time2 - time1) / 1000000 + " " + (time3 - time2) / 1000000)
 
     ret
   }
