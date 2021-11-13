@@ -86,7 +86,7 @@ class TpchSchemaProvider(sc: SparkContext, inputDir: String) {
   val sqlContext = new org.apache.spark.sql.SQLContext(sc)
   import sqlContext.implicits._
 
-  val dfMap = Map(
+  val dfMapRaw = Map(
     "customer" -> sc.textFile(inputDir + "/customer.tbl*").map(_.split('|')).map(p =>
       Customer(p(0).trim.toLong, p(1).trim, p(2).trim, p(3).trim.toLong, p(4).trim, p(5).trim.toDouble, p(6).trim, p(7).trim)).toDF(),
 
@@ -111,6 +111,8 @@ class TpchSchemaProvider(sc: SparkContext, inputDir: String) {
     "supplier" -> sc.textFile(inputDir + "/supplier.tbl*").map(_.split('|')).map(p =>
       Supplier(p(0).trim.toLong, p(1).trim, p(2).trim, p(3).trim.toLong, p(4).trim, p(5).trim.toDouble, p(6).trim)).toDF())
 
+  val dfMap = dfMapRaw.map { case(key, value) => (key, value.repartition(8).cache) }
+
   // for implicits
   val customer = dfMap.get("customer").get
   val lineitem = dfMap.get("lineitem").get
@@ -122,6 +124,6 @@ class TpchSchemaProvider(sc: SparkContext, inputDir: String) {
   val supplier = dfMap.get("supplier").get
 
   dfMap.foreach {
-    case (key, value) => value.createOrReplaceTempView(key)
+    case (key, value) => value.count; value.createOrReplaceTempView(key)
   }
 }

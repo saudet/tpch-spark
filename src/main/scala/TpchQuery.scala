@@ -34,7 +34,9 @@ abstract class TpchQuery {
 
 object TpchQuery {
 
-  def parseDate(date: String): Long = { new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date).getTime }
+  val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+  def parseDate(date: String): Long = { java.time.LocalDate.parse(date, dateFormatter).toEpochDay }
 
   def outputDF(df: DataFrame, outputDir: String, className: String): Unit = {
 
