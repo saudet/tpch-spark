@@ -55,6 +55,7 @@ class Q02 extends TpchQuery {
     val time2 = System.nanoTime()
 
     val df = ret.to_spark_DF.limit(100)
+    df.collect
 
     val time3 = System.nanoTime()
 

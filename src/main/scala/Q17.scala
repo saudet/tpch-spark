@@ -50,7 +50,7 @@ class Q17 extends TpchQuery {
 
     val time2 = System.nanoTime()
 
-    ret.count
+    ret.collect
 
     val time3 = System.nanoTime()
 
