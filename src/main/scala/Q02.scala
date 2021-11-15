@@ -25,11 +25,11 @@ class Q02 extends TpchQuery {
 
 //    val flineitem = new FrovedisDataFrame(lineitem)
 //    val forder = new FrovedisDataFrame(order)
-    val fregion = new FrovedisDataFrame(region)
-    val fnation  = new FrovedisDataFrame(nation)
+    val fregion = new FrovedisDataFrame(region.select("r_regionkey", "r_name"))
+    val fnation  = new FrovedisDataFrame(nation.select("n_nationkey", "n_regionkey", "n_name"))
     val fsupplier = new FrovedisDataFrame(supplier)
-    val fpartsupp = new FrovedisDataFrame(partsupp)
-    val fpart = new FrovedisDataFrame(part)
+    val fpartsupp = new FrovedisDataFrame(partsupp.select("ps_partkey", "ps_suppkey", "ps_supplycost"))
+    val fpart = new FrovedisDataFrame(part.select("p_partkey", "p_size", "p_type", "p_mfgr"))
 
     val time1 = System.nanoTime()
 

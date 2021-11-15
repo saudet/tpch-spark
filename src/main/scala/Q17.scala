@@ -26,14 +26,12 @@ class Q17 extends TpchQuery {
 
     val time0 = System.nanoTime()
 
-    val flineitem = new FrovedisDataFrame(lineitem)
-    val fpart = new FrovedisDataFrame(part)
+    val flineitem = new FrovedisDataFrame(lineitem.select("l_partkey", "l_quantity", "l_extendedprice"))
+    val fpart = new FrovedisDataFrame(part.select("p_partkey", "p_brand", "p_container"))
 
 //    val mul02 = udf { (x: Double) => x * 0.2 }
 
     val time1 = System.nanoTime()
-
-//    val flineitem2 = flineitem.select($$"l_partkey", $$"l_quantity", $$"l_extendedprice")
 
     val fpart2 = fpart.filter($$"p_brand" === "Brand#23" && $$"p_container" === "MED BOX")
       .select($$"p_partkey")

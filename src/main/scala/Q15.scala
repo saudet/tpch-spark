@@ -26,8 +26,8 @@ class Q15 extends TpchQuery {
 
     val time0 = System.nanoTime()
 
-    val flineitem = new FrovedisDataFrame(lineitem)
-    val fsupplier = new FrovedisDataFrame(supplier)
+    val flineitem = new FrovedisDataFrame(lineitem.select("l_shipdate", "l_suppkey", "l_extendedprice"))
+    val fsupplier = new FrovedisDataFrame(supplier.select("s_suppkey", "s_name", "s_address", "s_phone"))
 
 //    val decrease = udf { (x: Double, y: Double) => x * (1 - y) }
 
