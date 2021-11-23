@@ -1,6 +1,15 @@
 package main.scala
 
+import java.util.Arrays
+import com.nec.frovedis.Jexrpc._
+import com.nec.frovedis.matrix._
+import com.nec.frovedis.sql._
+import com.nec.frovedis.sql.functions._
+import com.nec.frovedis.sql.implicits_._
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.types._
 
 // TPC-H table schemas
 case class Customer(
@@ -79,6 +88,97 @@ case class Supplier(
   s_phone: String,
   s_acctbal: Double,
   s_comment: String)
+
+class Q06DataFrame extends FrovedisDataFrame {
+  def this(df: DataFrame) = {
+    this ()
+    load (df)
+  }
+
+  private def copy_local_data(index: Int, data: Iterator[Row], t_node: Node,
+      quantities_vptr: Long, extendedprices_vptr: Long, discounts_vptr: Long, shipdates_vptr: Long) : Iterator[Boolean] = {
+    var size: Int = 1024*1024
+    var quantities = new Array[Double](size)
+    var extendedprices = new Array[Double](size)
+    var discounts = new Array[Double](size)
+    var shipdates = new Array[Long](size)
+
+    var n: Int = 0
+    for (row <- data) {
+        if (n >= size) {
+            size *= 2
+            quantities = Arrays.copyOf(quantities, size)
+            extendedprices = Arrays.copyOf(extendedprices, size)
+            discounts = Arrays.copyOf(discounts, size)
+            shipdates = Arrays.copyOf(shipdates, size)
+        }
+        quantities(n) = row.getAs[Double](0)
+        extendedprices(n) = row.getAs[Double](1)
+        discounts(n) = row.getAs[Double](2)
+        shipdates(n) = row.getAs[Long](3)
+        n+=1
+    }
+    if (size != n) {
+        size = n
+        quantities = Arrays.copyOf(quantities, size)
+        extendedprices = Arrays.copyOf(extendedprices, size)
+        discounts = Arrays.copyOf(discounts, size)
+        shipdates = Arrays.copyOf(shipdates, size)
+    }
+    JNISupport.loadFrovedisWorkerDoubleVector(t_node,quantities_vptr,0,quantities,size)
+    JNISupport.loadFrovedisWorkerDoubleVector(t_node,extendedprices_vptr,0,extendedprices,size)
+    JNISupport.loadFrovedisWorkerDoubleVector(t_node,discounts_vptr,0,discounts,size)
+    JNISupport.loadFrovedisWorkerLongVector(t_node,shipdates_vptr,0,shipdates,size)
+
+    val err = JNISupport.checkServerException()
+    if (err != "") throw new java.rmi.ServerException(err)
+
+    Array(true).toIterator
+  }
+
+  override def load (df: DataFrame) : Unit = {
+    /** releasing the old data (if any) */
+    release()
+    cols = df.dtypes.map(_._1)
+    val tt = df.dtypes.map(_._2)
+    val size = cols.size
+    require(size == 4)
+    var dvecs = new Array[Long](size)
+    types = new Array[Short](size)
+    for (i <- 0 to (size-1)) {
+      //print("col_name: " + cols(i) + " col_type: " + tt(i) + "\n")
+      val tname = tt(i)
+      types(i) = TMAPPER.string2id(tname)
+//      dvecs(i) = TMAPPER.toTypedDvector(df,tname,i)
+    }
+
+    val fs = FrovedisServer.getServerInstance()
+    val nproc = fs.worker_size
+    val npart = df.rdd.getNumPartitions
+    require(nproc == npart)
+    val block_sizes = GenericUtils.get_block_sizes(npart, nproc)
+
+    val quantities_vptrs = JNISupport.allocateLocalVector(fs.master_node, block_sizes, nproc, DTYPE.DOUBLE)
+    val extendedprices_vptrs = JNISupport.allocateLocalVector(fs.master_node, block_sizes, nproc, DTYPE.DOUBLE)
+    val discounts_vptrs = JNISupport.allocateLocalVector(fs.master_node, block_sizes, nproc, DTYPE.DOUBLE)
+    val shipdates_vptrs = JNISupport.allocateLocalVector(fs.master_node, block_sizes, nproc, DTYPE.LONG)
+    val fw_nodes = JNISupport.getWorkerInfoMulti(fs.master_node, block_sizes.map(_ * size), nproc)
+    var info = JNISupport.checkServerException()
+    if (info != "") throw new java.rmi.ServerException(info)
+    val ret = df.rdd.mapPartitionsWithIndex(
+      (i,x) => copy_local_data(i,x,fw_nodes(i),quantities_vptrs(i),extendedprices_vptrs(i),discounts_vptrs(i),shipdates_vptrs(i)))
+    ret.count
+
+    dvecs(0) = JNISupport.createFrovedisDvector(fs.master_node,quantities_vptrs,nproc,DTYPE.DOUBLE)
+    dvecs(1) = JNISupport.createFrovedisDvector(fs.master_node,extendedprices_vptrs,nproc,DTYPE.DOUBLE)
+    dvecs(2) = JNISupport.createFrovedisDvector(fs.master_node,discounts_vptrs,nproc,DTYPE.DOUBLE)
+    dvecs(3) = JNISupport.createFrovedisDvector(fs.master_node,shipdates_vptrs,nproc,DTYPE.LONG)
+
+    fdata = JNISupport.createFrovedisDataframe(fs.master_node,types,cols,dvecs,size)
+    info = JNISupport.checkServerException()
+    if (info != "") throw new java.rmi.ServerException(info)
+  }
+}
 
 class TpchSchemaProvider(sc: SparkContext, inputDir: String) {
 

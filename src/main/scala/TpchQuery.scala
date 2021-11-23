@@ -80,6 +80,7 @@ object TpchQuery {
   }
 
   def main(args: Array[String]): Unit = {
+    org.apache.log4j.Logger.getLogger("org").setLevel(org.apache.log4j.Level.ERROR);
 
     var queryNum = 0;
     if (args.length > 0)

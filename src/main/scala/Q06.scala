@@ -24,7 +24,8 @@ class Q06 extends TpchQuery {
 
     val time0 = System.nanoTime()
 
-    val flineitem = new FrovedisDataFrame(lineitem.select("l_shipdate", "l_discount", "l_quantity", "l_extendedprice"))
+//    val flineitem = new FrovedisDataFrame(lineitem.select("l_quantity", "l_extendedprice", "l_discount", "l_shipdate"))
+    val flineitem = new Q06DataFrame(lineitem.select("l_quantity", "l_extendedprice", "l_discount", "l_shipdate"))
 
     val time1 = System.nanoTime()
 
