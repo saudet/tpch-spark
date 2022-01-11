@@ -26,8 +26,8 @@ class Q15 extends TpchQuery {
 
     val time0 = System.nanoTime()
 
-    val flineitem = new FrovedisDataFrame(lineitem.select("l_shipdate", "l_suppkey", "l_extendedprice"))
-    val fsupplier = new FrovedisDataFrame(supplier.select("s_suppkey", "s_name", "s_address", "s_phone"))
+    val flineitem = new FrovedisDataFrame(lineitem, "l_shipdate", "l_suppkey", "l_extendedprice")
+    val fsupplier = new FrovedisDataFrame(supplier, "s_suppkey", "s_name", "s_address", "s_phone")
 
 //    val decrease = udf { (x: Double, y: Double) => x * (1 - y) }
 
@@ -40,7 +40,7 @@ class Q15 extends TpchQuery {
       .agg(sum($$"l_extendedprice").as("total"))
     // .cache
 
-    val ret = new FrovedisDataFrame(revenue.agg(max($$"total").as("max_total")))
+    val ret = revenue.agg(max($$"total").as("max_total"))
       .join(revenue, $$"max_total" === revenue("total"))
       .join(fsupplier, $$"l_suppkey" === fsupplier("s_suppkey"))
       .select($$"s_suppkey", $$"s_name", $$"s_address", $$"s_phone", $$"total")

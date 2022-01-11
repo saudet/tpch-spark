@@ -25,10 +25,10 @@ class Q18 extends TpchQuery {
 
     val time0 = System.nanoTime()
 
-    val fcustomer = new FrovedisDataFrame(customer.select("c_custkey", "c_name"))
-    val flineitem = new FrovedisDataFrame(lineitem.select("l_orderkey", "l_quantity"))
+    val fcustomer = new FrovedisDataFrame(customer, "c_custkey", "c_name")
+    val flineitem = new FrovedisDataFrame(lineitem, "l_orderkey", "l_quantity")
     val flineitem2 = flineitem.withColumnRenamed("l_orderkey", "key")
-    val forder = new FrovedisDataFrame(order.select("o_orderkey", "o_custkey", "o_totalprice", "o_orderdate"))
+    val forder = new FrovedisDataFrame(order, "o_orderkey", "o_custkey", "o_totalprice", "o_orderdate")
 
     val time1 = System.nanoTime()
 

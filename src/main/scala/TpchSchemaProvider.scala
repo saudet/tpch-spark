@@ -136,7 +136,7 @@ class Q06DataFrame extends FrovedisDataFrame {
     Array(true).toIterator
   }
 
-  override def load (df: DataFrame) : Unit = {
+  override def load (df: DataFrame) : this.type = {
     /** releasing the old data (if any) */
     release()
     cols = df.dtypes.map(_._1)
@@ -177,6 +177,7 @@ class Q06DataFrame extends FrovedisDataFrame {
     fdata = JNISupport.createFrovedisDataframe(fs.master_node,types,cols,dvecs,size)
     info = JNISupport.checkServerException()
     if (info != "") throw new java.rmi.ServerException(info)
+    this
   }
 }
 

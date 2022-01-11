@@ -24,7 +24,7 @@ class Q06 extends TpchQuery {
 
     val time0 = System.nanoTime()
 
-//    val flineitem = new FrovedisDataFrame(lineitem.select("l_quantity", "l_extendedprice", "l_discount", "l_shipdate"))
+//    val flineitem = new FrovedisDataFrame(lineitem, "l_shipdate", "l_discount", "l_quantity", "l_extendedprice")
     val flineitem = new Q06DataFrame(lineitem.select("l_quantity", "l_extendedprice", "l_discount", "l_shipdate"))
 
     val time1 = System.nanoTime()
@@ -34,13 +34,14 @@ class Q06 extends TpchQuery {
 
     val time2 = System.nanoTime()
 
-    ret.collect
+    val df = ret.to_spark_DF
+    df.collect
 
     val time3 = System.nanoTime()
 
     System.out.println("TIMES = " + (time1 - time0) / 1000000 + " " + (time2 - time1) / 1000000 + " " + (time3 - time2) / 1000000)
 
-    ret
+    df
   }
 
 }
